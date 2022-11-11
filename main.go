@@ -4,21 +4,15 @@ import (
 	//"errors"
 	"log"
 	//"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gokhankocer/TODO-API/handlers"
 	//"gorm.io/gorm"
 )
-
-type Todo struct {
-	ID          string `json:"id"`
-	Status      string `json:"status"`
-	Description string `json:"description"`
-}
 
 func main() {
 	router := gin.Default()
 	//router.GET("/todos", getTodos)
-	//router.POST("todos", addTodo)
+	router.POST("todos", handlers.AddTodo)
 	//router.GET("todos/:id", getTodo)
 	//router.PATCH("todos/:id", updateTodoStatus)
 	log.Fatal(router.Run("localhost:9090"))
