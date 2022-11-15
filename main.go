@@ -15,7 +15,8 @@ func main() {
 	database.Connect()
 	router.GET("/todos", handlers.GetTodos)
 	router.POST("todos", handlers.AddTodo)
+	router.DELETE("todos/:id", handlers.DeleteTodo)
 	//router.GET("todos/:id", getTodo)
-	//router.PATCH("todos/:id", updateTodoStatus)
+	router.PUT("todos/:id", handlers.UpdateTodo)
 	log.Fatal(router.Run("localhost:8080"))
 }

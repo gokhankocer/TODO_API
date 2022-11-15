@@ -22,8 +22,28 @@ func AddTodo(c *gin.Context) {
 	c.JSON(http.StatusOK, &todo)
 }
 
+func DeleteTodo(c *gin.Context) {
+	var todo entities.Todo
+	database.DB.Where("id = ?", c.Param("id")).Delete(&todo)
+	c.JSON(200, &todo)
+}
+
+func UpdateTodo(c *gin.Context) {
+	var todo entities.Todo
+	database.DB.Where("id = ?", c.Param("id")).First(&todo)
+	c.BindJSON(&todo)
+	database.DB.Save(&todo)
+	c.JSON(200, todo)
+}
+
+func GetTodo(c *gin.Context) {
+	var todo entities.Todo
+	database.DB.Where(&todo, "id = ?", c.Param("id"))
+	c.JSON(200, &todo)
+}
+
 func GetTodos(c *gin.Context) {
-	todos := []models.Todo{}
+	todos := []entities.Todo{}
 	database.DB.Find(&todos)
-	c.JSON(200, todos)
+	c.JSON(200, &todos)
 }
