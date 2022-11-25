@@ -16,7 +16,7 @@ func main() {
 	router.GET("/todos", handlers.GetTodos)
 	router.POST("todos", handlers.AddTodo)
 	router.DELETE("todos/:id", handlers.DeleteTodo)
-	//router.GET("todos/:id", getTodo)
+	router.GET("todos/:id", handlers.GetTodo)
 	router.PUT("todos/:id", handlers.UpdateTodo)
 	log.Fatal(router.Run("localhost:8080"))
 }

@@ -1,356 +1,74 @@
 swagger: "2.0"
 info:
-  description: User activity logs API
+  description: Todo Api Hold Info
   version: 1.0.0
-  title: GoWit - AdPlatform Activity History API
+  title: TODO API
   contact:
-    email: yunus.ulucay@turkcell.com.tr
+    email: gkkocer@gmail.com
 schemes:
   - "https"
   - "http"
 tags:
-  - name: activity
-    description: Activity History
+  - name: todo
+    description: Todo Related
 paths:
-  /activity/{account_id}table:
+  /todos/{todo_id}:
     parameters:
-      - name: account_id
+      - name: todo_id
         in: path
-        description: Account ID
+        description: Todo ID
         type: integer
         format: int64
         required: true
-    post:
+    get:
       tags:
-        - activity
-      summary: Get activities with table request
-      operationId: getActivities
-      description: Get activities with table request
+        - Todo
+      summary: get todo with id
+      operationId: getTodo
+      description: get todo with ID
+      produces:
+        - application/json     
+      responses:
+        "200":
+          description: Todo is successfully returned
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        "400":
+          description: Bad request
+    delete:
+      tags:
+        - todo
+      operationId: deleteTodo
+      security:
+        - Bearer: []
       produces:
         - application/json
       consumes:
         - application/json
-      parameters:
-        - in: body
-          name: PostTableRequest
-          schema:
-            $ref: "#/definitions/PostTableRequest"
       responses:
-        "200":
-          description: Domain list successfully return
-          schema:
-            $ref: "#/definitions/PaginatedActivitiesResponse"
+        "204":
+          description: Todo deleted
         "400":
-          description: Bad request
-  /activity/admin/table:
-    post:
-      tags:
-        - activity
-      summary: Get activities with table request
-      operationId: getAdminActivities
-      description: Get activities with table request
-      produces:
-        - application/json
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: PostTableRequest
-          schema:
-            $ref: "#/definitions/PostTableRequest"
-      responses:
-        "200":
-          description: Domain list successfully return
-          schema:
-            $ref: "#/definitions/PaginatedActivitiesAdminResponse"
-        "400":
-          description: Bad request
+          description: Bad Request
+        "404":
+          description: Todo Not Found
+        "500":
+          description: Internal Server Error
 definitions:
-  Filter:
-    type: object
-    description: Single filter object for tables
-    properties:
-      key:
-        type: string
-      op:
-        type: string
-        enum: [eq, ne, ct, in, notin, sw, ew, like, gt, ge, lt, le]
-      value: {}
-    required:
-      - key
-      - op
-      - value
-  KafkaActivityHistory:
-    type: object
-    properties:
-      userId:
-        type: integer
-        format: uint64
-      userName:
-        type: string
-      activity:
-        type: string
-      activityField:
-        $ref: "#/definitions/ActivityField"
-      resourceType:
-        $ref: "#/definitions/ResourceType"
-      activityType:
-        $ref: "#/definitions/ActivityType"
-      activityDate:
-        type: string
-      activityValue:
-        type: string
-      accountId:
-        type: integer
-        format: uint64
-        x-nullable: true
-      accountName:
-        type: string
-      activities:
-        type: array
-        items:
-          type: string
-      activityFieldId:
-        type: integer
-        format: uint64
-  PostTableRequest:
-    type: object
-    description: Parameters for table request
-    properties:
-      page:
-        type: integer
-        format: int64
-        default: 1
-      pageSize:
-        type: integer
-        format: int64
-        default: 10
-      sort:
-        type: object
-        additionalProperties:
-          type: string
-          enum: [asc, desc]
-        x-nullable: true
-      search:
-        type: string
-        x-nullable: true
-      export:
-        type: string
-        enum: [PDF, CSV, EXCEL]
-        x-nullable: true
-      filters:
-        type: array
-        items:
-          $ref: "#/definitions/Filter"
-        x-nullable: true
-      startDate:
-        type: string
-        format: date-time
-        x-nullable: true
-      endDate:
-        type: string
-        format: date-time
-        x-nullable: true
-  KafkaEventMessage:
-    type: object
-    properties:
-      event:
-        type: string
-      payload:
-        $ref: "#/definitions/KafkaActivityHistory"
-  ActivityHistory:
+  TodoResponse:
     type: object
     properties:
       id:
         type: integer
         format: uint64
-      userId:
-        type: integer
-        format: uint64
-      userName:
+      description:
         type: string
-      activity:
+      status:
         type: string
-      activityField:
-        $ref: "#/definitions/ActivityField"
-      activityType:
-        $ref: "#/definitions/ActivityType"
-      activityDate:
-        type: string
-      accountId:
-        type: integer
-        format: uint64
-      accountName:
-        type: string
-      activityFieldId:
-        type: integer
-        format: uint64
-  ActivityResponse:
+  PostTodoRequest:
     type: object
     properties:
-      activityId:
-        type: integer
-        format: uint64
-        x-go-name: id
-      activityUserId:
-        type: integer
-        format: uint64
-        x-go-name: userId
-      activityValue:
+      description:
         type: string
-      activityUserName:
+      status:
         type: string
-        x-go-name: userName
-      activity:
-        type: string
-      accountName:
-        type: string
-      activityField:
-        $ref: "#/definitions/ActivityField"
-      activityType:
-        $ref: "#/definitions/ActivityType"
-      activityDate:
-        type: string
-      activityFieldId:
-        type: integer
-        format: uint64
-  ActivityExport:
-    type: object
-    properties:
-      userName:
-        type: string
-      activityField:
-        type: string
-      activityType:
-        type: string
-      activity:
-        type: string
-      activityDate:
-        type: string
-  ActivityAdminResponse:
-    type: object
-    properties:
-      activityId:
-        type: integer
-        format: uint64
-        x-go-name: id
-      activityUserId:
-        type: integer
-        format: uint64
-        x-go-name: userId
-      activityUserName:
-        type: string
-        x-go-name: userName
-      activity:
-        type: string
-      activityField:
-        $ref: "#/definitions/ActivityField"
-      activityType:
-        $ref: "#/definitions/ActivityType"
-      activityDate:
-        type: string
-      accountId:
-        type: integer
-        format: uint64
-      accountName:
-        type: string
-      activityFieldId:
-        type: integer
-        format: uint64
-  PaginatedActivitiesResponse:
-    type: object
-    properties:
-      totalRecords:
-        type: integer
-        format: uint64
-      records:
-        type: array
-        items:
-          $ref: "#/definitions/ActivityResponse"
-  PaginatedActivitiesAdminResponse:
-    type: object
-    properties:
-      totalRecords:
-        type: integer
-        format: uint64
-      records:
-        type: array
-        items:
-          $ref: "#/definitions/ActivityAdminResponse"
-  ActivityField:
-    type: string
-    enum:
-      - "payment"
-      - "users"
-      - "reporting"
-      - "inventory"
-      - "ad_unit"
-      - "rules"
-      - "general_settings"
-      - "private_auctions"
-      - "preferred_deals"
-      - "creative_blocking"
-      - "native_asset"
-      - "native_format"
-      - "native_style"
-      - "conneciton"
-      - "account"
-      - "security"
-      - "deal"
-  ActivityType:
-    type: string
-    enum:
-      - "INSERT"
-      - "UPDATE"
-      - "DELETE"
-      - "ARCHIVE"
-      - "UNARCHIVE"
-      - "STOP"
-      - "ACTIVE"
-      - "PAUSED"
-      - "COPY"
-      - "CONNECTED"
-      - "REVIEWPENDING"
-      - "REQUESTPENDING"
-      - "NOCONNECTION"
-      - "CONNECTIONREMOVED"
-  ResourceType:
-    type: string
-    enum:
-      - "ssp_api"
-      - "ssp_admin"
-      - "adx_api"
-      - "adx_admin"
-      - "ssp_account"
-      - "dsp_account"
-  ApiError:
-    type: object
-    properties:
-      httpStatus:
-        type: integer
-        format: int
-      errorCode:
-        $ref: "#/definitions/ErrorCode"
-      errorMessage:
-        type: string
-  ErrorCode:
-    type: string
-    enum:
-      - "30000"
-      - "30001"
-      - "30002"
-      - "30003"
-      - "30004"
-      - "30005"
-      - "30006"
-      - "30007"
-      - "30008"
-      - "30009"
-      - "30010"
-      - "30011"
-      - "30012"
-    description: >
-      * 80000: Error unmarshalling request. Check your request.
-      * 80001: Required parameters are missing.
-      * 80002: Minimum value is exceeded.
-      * 80003: Maximum value is exceeded.
