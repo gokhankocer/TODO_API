@@ -54,6 +54,78 @@ paths:
           description: Todo Not Found
         "500":
           description: Internal Server Error
+    put:
+      tags:
+        - todo
+      summary: Update todo
+      description: |
+        Update Todo By Id
+      operationId: updateTodo
+      produces:
+          - application/json
+      consumes:
+          - application/json
+      security:
+        - Bearer: []
+      parameters:
+          - in: body
+            name: updateTodoRequest
+            schema:
+              $ref: "#/definitions/PostTodoRequest"
+      responses:
+        '200':
+          description: Order details updated successfully
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        '500':
+          description: Internal Server Error
+  /todos:
+    get:
+      tags:
+          - todos
+      summary: Get Todos
+      description: Get Todo Details from THE List
+      operationId: getTodos
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      responses:
+        "200":
+          description: Todo Successfully Returned
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+    post:
+      tags:
+        - todo
+      summary: Create todo
+      description: |
+        Create Todo
+      operationId: createTodo
+      produces:
+          - application/json
+      consumes:
+          - application/json
+      security:
+        - Bearer: []
+      parameters:
+          - in: body
+            name: createNewTodo
+            schema:
+              $ref: "#/definitions/PostTodoRequest"
+      responses:
+        '200':
+          description: New Todo Been Created Successfully
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        '500':
+          description: Internal Server Error
 definitions:
   TodoResponse:
     type: object
