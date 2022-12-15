@@ -18,11 +18,11 @@ paths:
         in: path
         description: Todo ID
         type: integer
-        format: int64
+        format: uint64
         required: true
     get:
       tags:
-        - Todo
+        - todo
       summary: get todo with id
       operationId: getTodo
       description: get todo with ID
@@ -35,16 +35,14 @@ paths:
             $ref: "#/definitions/TodoResponse"
         "400":
           description: Bad request
+        "404":
+          description: Todo Not Found
+        "500":
+          description: Internal Server Error
     delete:
       tags:
         - todo
       operationId: deleteTodo
-      security:
-        - Bearer: []
-      produces:
-        - application/json
-      consumes:
-        - application/json
       responses:
         "204":
           description: Todo deleted
@@ -54,7 +52,7 @@ paths:
           description: Todo Not Found
         "500":
           description: Internal Server Error
-    put:
+    patch:
       tags:
         - todo
       summary: Update todo
@@ -65,8 +63,6 @@ paths:
           - application/json
       consumes:
           - application/json
-      security:
-        - Bearer: []
       parameters:
           - in: body
             name: updateTodoRequest
@@ -82,14 +78,12 @@ paths:
   /todos:
     get:
       tags:
-          - todos
+          - todo
       summary: Get Todos
-      description: Get Todo Details from THE List
+      description: Get Todo Details From The List
       operationId: getTodos
       produces:
         - application/json
-      security:
-        - Bearer: []
       responses:
         "200":
           description: Todo Successfully Returned
@@ -105,22 +99,19 @@ paths:
       tags:
         - todo
       summary: Create todo
-      description: |
-        Create Todo
+      description: Create Todo       
       operationId: createTodo
       produces:
           - application/json
       consumes:
           - application/json
-      security:
-        - Bearer: []
       parameters:
           - in: body
             name: createNewTodo
             schema:
               $ref: "#/definitions/PostTodoRequest"
       responses:
-        '200':
+        '201':
           description: New Todo Been Created Successfully
           schema:
             $ref: "#/definitions/TodoResponse"
@@ -139,6 +130,9 @@ definitions:
         type: string
   PostTodoRequest:
     type: object
+     required:
+    - status
+    - description
     properties:
       description:
         type: string

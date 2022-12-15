@@ -17,6 +17,6 @@ func main() {
 	router.POST("todos", handlers.AddTodo)
 	router.DELETE("todos/:id", handlers.DeleteTodo)
 	router.GET("todos/:id", handlers.GetTodo)
-	router.PUT("todos/:id", handlers.UpdateTodo)
+	router.PATCH("todos/:id", handlers.UpdateTodo)
 	log.Fatal(router.Run("localhost:8080"))
 }

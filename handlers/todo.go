@@ -8,13 +8,22 @@ import (
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/models"
+	"github.com/gokhankocer/TODO-API/repository"
 )
+
+type TodoHandler struct {
+	TodoRepository repository.ToDoRepoInterface
+}
+
+func CreateHandeler(TodoRepo repository.ToDoRepoInterface) *TodoHandler {
+	return &TodoHandler{TodoRepository: TodoRepo}
+}
 
 func AddTodo(c *gin.Context) {
 	requestTodo := &models.PostTodoRequest{}
 	if err := c.BindJSON(requestTodo); err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Invalid Request",
+			"error": "Invalid Request Payload",
 		})
 		return
 	}
@@ -27,18 +36,19 @@ func AddTodo(c *gin.Context) {
 		return
 	}
 	todo := entities.Todo{
-		Status:      &requestTodo.Status,
-		Description: &requestTodo.Description,
+		Status:      requestTodo.Status,
+		Description: requestTodo.Description,
 	}
 
 	database.DB.Create(&todo)
+
 	responseTodo := &models.TodoResponse{
 		ID:          uint64(todo.ID),
-		Status:      *todo.Status,
-		Description: *todo.Description,
+		Status:      todo.Status,
+		Description: todo.Description,
 	}
 
-	c.JSON(http.StatusOK, &responseTodo)
+	c.JSON(http.StatusCreated, &responseTodo)
 
 }
 
@@ -50,7 +60,10 @@ func DeleteTodo(c *gin.Context) {
 
 func UpdateTodo(c *gin.Context) {
 	var todo entities.Todo
-	database.DB.Where("id = ?", c.Param("id")).First(&todo)
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Todo Not Found"})
+		return
+	}
 	c.BindJSON(&todo)
 	database.DB.Save(&todo)
 	c.JSON(200, todo)
@@ -58,12 +71,20 @@ func UpdateTodo(c *gin.Context) {
 
 func GetTodo(c *gin.Context) {
 	var todo entities.Todo
-	database.DB.Where("id = ?", c.Param("id")).First(&todo)
-	c.JSON(200, &todo)
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Todo not found"})
+		return
+	}
+	c.JSON(http.StatusAccepted, &todo)
+
 }
 
 func GetTodos(c *gin.Context) {
 	todos := []entities.Todo{}
-	database.DB.Find(&todos)
+	err := database.DB.Find(&todos).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Request"})
+		return
+	}
 	c.JSON(200, &todos)
 }
