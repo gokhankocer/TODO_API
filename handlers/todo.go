@@ -66,7 +66,12 @@ func UpdateTodo(c *gin.Context) {
 	}
 	c.BindJSON(&todo)
 	database.DB.Save(&todo)
-	c.JSON(200, todo)
+	responseTodo := &models.TodoResponse{
+		ID:          uint64(todo.ID),
+		Status:      todo.Status,
+		Description: todo.Description,
+	}
+	c.JSON(200, responseTodo)
 }
 
 func GetTodo(c *gin.Context) {
@@ -80,7 +85,7 @@ func GetTodo(c *gin.Context) {
 }
 
 func GetTodos(c *gin.Context) {
-	todos := []entities.Todo{}
+	var todos []entities.Todo
 	err := database.DB.Find(&todos).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Request"})
