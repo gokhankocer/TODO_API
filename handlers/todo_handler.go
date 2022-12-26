@@ -4,23 +4,23 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-openapi/strfmt"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
+	"github.com/gokhankocer/TODO-API/helper"
 	"github.com/gokhankocer/TODO-API/models"
-	"github.com/gokhankocer/TODO-API/repository"
+	//"github.com/gokhankocer/TODO-API/repository"
 )
 
-type TodoHandler struct {
+/*type TodoHandler struct {
 	TodoRepository repository.ToDoRepoInterface
 }
 
 func CreateHandeler(TodoRepo repository.ToDoRepoInterface) *TodoHandler {
 	return &TodoHandler{TodoRepository: TodoRepo}
-}
+}*/
 
 func AddTodo(c *gin.Context) {
-	requestTodo := &models.PostTodoRequest{}
+	var requestTodo models.PostTodoRequest
 	if err := c.BindJSON(requestTodo); err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid Request Payload",
@@ -28,28 +28,26 @@ func AddTodo(c *gin.Context) {
 		return
 	}
 
-	err := requestTodo.Validate(strfmt.Default)
+	/*err := requestTodo.Validate(strfmt.Default)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Missing Fields",
 		})
 		return
+	}*/
+	user, err := helper.CurrentUser(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Logged in"})
+		return
 	}
-	todo := entities.Todo{
-		Status:      requestTodo.Status,
-		Description: requestTodo.Description,
+	var todo entities.Todo
+	todo.UserID = user.ID
+	savedTodo, err := todo.Save()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create todo"})
+		return
 	}
-
-	database.DB.Create(&todo)
-
-	responseTodo := &models.TodoResponse{
-		ID:          uint64(todo.ID),
-		Status:      todo.Status,
-		Description: todo.Description,
-	}
-
-	c.JSON(http.StatusCreated, &responseTodo)
-
+	c.JSON(http.StatusCreated, gin.H{"data": savedTodo})
 }
 
 func DeleteTodo(c *gin.Context) {
@@ -92,4 +90,5 @@ func GetTodos(c *gin.Context) {
 		return
 	}
 	c.JSON(200, &todos)
+
 }

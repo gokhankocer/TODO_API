@@ -1,6 +1,6 @@
 package repository
 
-import (
+/*import (
 	"github.com/gokhankocer/TODO-API/entities"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -18,7 +18,7 @@ type ToDoRepoInterface interface {
 	GetTodos(t []*entities.Todo) ([]*entities.Todo, error)
 }
 
-func NewTodoRepository(db *gorm.DB) *ToDoRepository {
+func NewTodoRepository(db *gorm.DB) ToDoRepoInterface {
 	return &ToDoRepository{db}
 }
 
@@ -55,7 +55,7 @@ func (repository *ToDoRepository) DeleteTodo(t *entities.Todo) error {
 	return nil
 }
 
-func (repository *ToDoRepository) UpdateTodo(t *entities.Todo) error {
+func (repository *ToDoRepository) UpdateTodo(t entities.Todo) error {
 	return repository.db.Omit(clause.Associations).Save(&t).Error
 
-}
+}*/

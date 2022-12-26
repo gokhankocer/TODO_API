@@ -3,6 +3,8 @@ package entities
 import (
 	"time"
 
+	"github.com/gokhankocer/TODO-API/database"
+
 	"gorm.io/gorm"
 )
 
@@ -16,10 +18,10 @@ type Todo struct {
 	UserID      uint
 }
 
-type User struct {
-	gorm.Model
-	Name     string `json:"name"`
-	Email    string `json:"email" gorm:"unique"`
-	Password string `json:"password"`
-	Todos    []Todo
+func (todo *Todo) Save() (*Todo, error) {
+	err := database.DB.Create(&todo).Error
+	if err != nil {
+		return &Todo{}, err
+	}
+	return todo, nil
 }
