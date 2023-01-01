@@ -1,7 +1,7 @@
 package models
 
 type UserResponse struct {
-	ID string `json:"id,omitempty"`
+	ID uint64 `json:"id,omitempty"`
 
 	Name string `json:"name,omitempty"`
 

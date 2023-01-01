@@ -20,7 +20,7 @@ func GenerateJwt(user entities.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  user.ID,
 		"iat": time.Now().Unix(),
-		"eat": time.Now().Add(time.Hour * time.Duration(tokenTTL)).Unix(),
+		"eat": time.Now().Add(time.Second * time.Duration(tokenTTL)).Unix(),
 	})
 	return token.SignedString(jwtKey)
 }
@@ -58,7 +58,7 @@ func getToken(c *gin.Context) (*jwt.Token, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-
+		//Bu kismin ne oldugunu anlamadim.
 		return jwtKey, nil
 	})
 	return token, err

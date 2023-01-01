@@ -3,12 +3,14 @@ package main
 import (
 	//"errors"
 	"log"
-	//"net/http"
+	"os"
+
+	"github.com/gin-gonic/contrib/sessions"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/handlers"
-	//"github.com/gokhankocer/TODO-API/helper"
+	"github.com/gokhankocer/TODO-API/middleware"
 	//"github.com/golang-jwt/jwt/v4"
 	//"golang.org/x/crypto/bcrypt"
 	//"gorm.io/gorm"
@@ -17,31 +19,27 @@ import (
 func main() {
 
 	database.Connect()
+
 	router := gin.Default()
-	//publicRoutes := router.Group("/auth")
-	router.POST("/signup", handlers.Signup)
-	router.POST("/login", handlers.Login)
-	//protectedRoutes := router.Group("/api")
-	//protectedRoutes.Use(JWTAuthMiddleware())
-	router.GET("/todos", handlers.GetTodos)
-	router.POST("todos", handlers.AddTodo)
-	router.DELETE("todos/:id", handlers.DeleteTodo)
-	router.GET("todos/:id", handlers.GetTodo)
-	router.PATCH("todos/:id", handlers.UpdateTodo)
+	store := sessions.NewCookieStore([]byte(os.Getenv("SECRET")))
+	router.Use(sessions.Sessions("mysession", store))
+	publicRoutes := router.Group("/auth")
+	publicRoutes.POST("/signup", handlers.Signup)
+	publicRoutes.POST("/login", handlers.Login)
+	publicRoutes.GET("/logout", handlers.Logout)
+	protectedRoutes := router.Group("/api")
+	protectedRoutes.Use(middleware.JWTAuthMiddleware())
+	protectedRoutes.GET("/todos", handlers.GetTodos)
+	protectedRoutes.POST("todos", handlers.AddTodo)
+	protectedRoutes.DELETE("todos/:id", handlers.DeleteTodo)
+	protectedRoutes.GET("todos/:id", handlers.GetTodo)
+	protectedRoutes.PATCH("todos/:id", handlers.UpdateTodo)
+	protectedRoutes.GET("users/", handlers.GetUsers)
+	protectedRoutes.GET("users/:id", handlers.GetUserById)
+	protectedRoutes.PATCH("users/:id", handlers.UpdateUser)
+	protectedRoutes.DELETE("users/:id", handlers.DeleteUser)
 
 	//database.DB.Migrator().CreateTable(&entities.User{}, &entities.Todo{})
 	//router.GET("/protected", handlers.TokenVerifiyMiddleWare(ProtectedEndpoint))//
 	log.Fatal(router.Run("localhost:8080"))
 }
-
-/*func JWTAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		err := helper.ValidateJWT(c)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication Required"})
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}*/
