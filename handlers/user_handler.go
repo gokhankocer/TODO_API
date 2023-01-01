@@ -86,12 +86,6 @@ func Logout(c *gin.Context) {
 func GetUsers(c *gin.Context) {
 	var users []entities.User
 
-	val, err := database.RDB.Get(c, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
-
 	err := database.DB.Find(&users).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid Request"})

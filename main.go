@@ -18,7 +18,8 @@ import (
 
 func main() {
 
-	database.Connect()
+	database.ConnectPostgres()
+	database.ConnectRedis()
 
 	router := gin.Default()
 	store := sessions.NewCookieStore([]byte(os.Getenv("SECRET")))
