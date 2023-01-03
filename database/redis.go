@@ -1,6 +1,8 @@
 package database
 
-import "github.com/go-redis/redis/v9"
+import (
+	"github.com/go-redis/redis/v9"
+)
 
 // "fmt"
 

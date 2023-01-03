@@ -27,7 +27,9 @@ func main() {
 	publicRoutes := router.Group("/auth")
 	publicRoutes.POST("/signup", handlers.Signup)
 	publicRoutes.POST("/login", handlers.Login)
-	publicRoutes.GET("/logout", handlers.Logout)
+
+	publicRoutes.GET("/logout", middleware.JWTAuthMiddleware(), handlers.Logout)
+
 	protectedRoutes := router.Group("/api")
 	protectedRoutes.Use(middleware.JWTAuthMiddleware())
 	protectedRoutes.GET("/todos", handlers.GetTodos)

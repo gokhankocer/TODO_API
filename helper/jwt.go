@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -26,14 +27,20 @@ func GenerateJwt(user entities.User) (string, error) {
 }
 
 func ValidateJWT(c *gin.Context) error {
-	token, err := getToken(c)
+	token, err := GetToken(c)
 	if err != nil {
 		return err
 	}
+
+	if isBlacklisted(c, token) {
+		return errors.New("invalid token provided")
+	}
+
 	_, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		return nil
 	}
+
 	return errors.New("invalid token provided")
 }
 
@@ -42,7 +49,7 @@ func CurrentUser(c *gin.Context) (entities.User, error) {
 	if err != nil {
 		return entities.User{}, err
 	}
-	token, _ := getToken(c)
+	token, _ := GetToken(c)
 	claims, _ := token.Claims.(jwt.MapClaims)
 	userId := uint(claims["id"].(float64))
 	user, err := entities.FindUserById(userId)
@@ -52,7 +59,7 @@ func CurrentUser(c *gin.Context) (entities.User, error) {
 	return user, nil
 }
 
-func getToken(c *gin.Context) (*jwt.Token, error) {
+func GetToken(c *gin.Context) (*jwt.Token, error) {
 	tokenString := getTokenFromRequest(c)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -71,4 +78,17 @@ func getTokenFromRequest(c *gin.Context) string {
 		return splitToken[1]
 	}
 	return ""
+}
+
+func isBlacklisted(c *gin.Context, token *jwt.Token) bool {
+
+	res, err := database.RDB.Exists(c, token.Raw).Result()
+	if err != nil {
+		panic(err)
+	}
+	if res == 1 {
+		return true
+	}
+	return false
+
 }

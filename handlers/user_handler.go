@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
@@ -59,6 +58,7 @@ func Login(c *gin.Context) {
 	}
 
 	jwt, err := helper.GenerateJwt(user)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to Create Token"})
 		return
@@ -68,19 +68,15 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	session := sessions.Default(c)
-	user := session.Get(userkey)
-	fmt.Println(user)
-	if user == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session token"})
-		return
+
+	token, _ := helper.GetToken(c)
+
+	err := database.RDB.Set(c, token.Raw, 1, 0).Err()
+	if err != nil {
+		panic(err)
 	}
-	session.Delete(userkey)
-	if err := session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully Loged Out"})
+
 }
 
 func GetUsers(c *gin.Context) {
