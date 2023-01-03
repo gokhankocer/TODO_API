@@ -1,0 +1,140 @@
+swagger: "2.0"
+info:
+  description: Todo Api Hold Info
+  version: 1.0.0
+  title: TODO API
+  contact:
+    email: gkkocer@gmail.com
+schemes:
+  - "https"
+  - "http"
+tags:
+  - name: todo
+    description: Todo Related
+paths:
+  /todos/{todo_id}:
+    parameters:
+      - name: todo_id
+        in: path
+        description: Todo ID
+        type: integer
+        format: uint64
+        required: true
+    get:
+      tags:
+        - todo
+      summary: get todo with id
+      operationId: getTodo
+      description: get todo with ID
+      produces:
+        - application/json     
+      responses:
+        "200":
+          description: Todo is successfully returned
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        "400":
+          description: Bad request
+        "404":
+          description: Todo Not Found
+        "500":
+          description: Internal Server Error
+    delete:
+      tags:
+        - todo
+      operationId: deleteTodo
+      responses:
+        "204":
+          description: Todo deleted
+        "400":
+          description: Bad Request
+        "404":
+          description: Todo Not Found
+        "500":
+          description: Internal Server Error
+    patch:
+      tags:
+        - todo
+      summary: Update todo
+      description: |
+        Update Todo By Id
+      operationId: updateTodo
+      produces:
+          - application/json
+      consumes:
+          - application/json
+      parameters:
+          - in: body
+            name: updateTodoRequest
+            schema:
+              $ref: "#/definitions/PostTodoRequest"
+      responses:
+        '200':
+          description: Order details updated successfully
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        '500':
+          description: Internal Server Error
+  /todos:
+    get:
+      tags:
+          - todo
+      summary: Get Todos
+      description: Get Todo Details From The List
+      operationId: getTodos
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Todo Successfully Returned
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+    post:
+      tags:
+        - todo
+      summary: Create todo
+      description: Create Todo       
+      operationId: createTodo
+      produces:
+          - application/json
+      consumes:
+          - application/json
+      parameters:
+          - in: body
+            name: createNewTodo
+            schema:
+              $ref: "#/definitions/PostTodoRequest"
+      responses:
+        '201':
+          description: New Todo Been Created Successfully
+          schema:
+            $ref: "#/definitions/TodoResponse"
+        '500':
+          description: Internal Server Error
+definitions:
+  TodoResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: uint64
+      description:
+        type: string
+      status:
+        type: string
+  PostTodoRequest:
+    type: object
+     required:
+    - status
+    - description
+    properties:
+      description:
+        type: string
+      status:
+        type: string
