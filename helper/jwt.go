@@ -51,7 +51,7 @@ func CurrentUser(c *gin.Context) (entities.User, error) {
 	}
 	token, _ := GetToken(c)
 	claims, _ := token.Claims.(jwt.MapClaims)
-	userId := uint(claims["id"].(float64))
+	userId := uint(claims["user_id"].(float64))
 	user, err := entities.FindUserById(userId)
 	if err != nil {
 		return entities.User{}, err
@@ -65,8 +65,9 @@ func GetToken(c *gin.Context) (*jwt.Token, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
+		fmt.Println(os.Getenv("SECRET"))
 		//Bu kismin ne oldugunu anlamadim.
-		return jwtKey, nil
+		return []byte(os.Getenv("SECRET")), nil
 	})
 	return token, err
 }

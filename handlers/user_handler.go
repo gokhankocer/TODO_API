@@ -11,8 +11,6 @@ import (
 	"github.com/gokhankocer/TODO-API/models"
 )
 
-const userkey = "user"
-
 func Signup(c *gin.Context) {
 	var user entities.User
 	err := c.Bind(&user)
@@ -51,10 +49,15 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Name"})
 		return
 	}
+	if user.Name != body.Name {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Name"})
+		return
+	}
 
-	err = user.VerifyPassword(body.Password)
-	if err != nil {
-		c.Abort()
+	password := user.VerifyPassword(body.Password)
+	if password != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Password"})
+		return
 	}
 
 	jwt, err := helper.GenerateJwt(user)

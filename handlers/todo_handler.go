@@ -5,11 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-openapi/strfmt"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
+
 	"github.com/gokhankocer/TODO-API/models"
-	//"github.com/gokhankocer/TODO-API/repository"
+	"github.com/gokhankocer/TODO-API/repository"
 )
 
 /*type TodoHandler struct {
@@ -32,13 +34,13 @@ func AddTodo(c *gin.Context) {
 		return
 	}
 
-	/*err := requestTodo.Validate(strfmt.Default)
+	err := requestTodo.Validate(strfmt.Default)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Missing Fields",
 		})
 		return
-	}*/
+	}
 	user, err := helper.CurrentUser(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Logged in"})
@@ -74,7 +76,7 @@ func DeleteTodo(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not Authorized"})
 		return
 	}
-	database.DB.Delete(&todo)
+	repository.DeleteTodo(&todo)
 	c.JSON(200, &todo)
 }
 
