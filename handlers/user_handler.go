@@ -8,6 +8,7 @@ import (
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
+	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
 	"github.com/gokhankocer/TODO-API/models"
 )
 
@@ -33,6 +34,7 @@ func Signup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create user"})
 		return
 	}
+	kafka.Producer("new-user", result)
 	c.JSON(http.StatusOK, user)
 }
 

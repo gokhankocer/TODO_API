@@ -2,11 +2,14 @@ package main
 
 import (
 	//"errors"
+
+	"context"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/handlers"
+	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
 	"github.com/gokhankocer/TODO-API/middleware"
 	"github.com/joho/godotenv"
 	//"github.com/golang-jwt/jwt/v4"
@@ -18,6 +21,7 @@ func main() {
 	loadEnv()
 	database.ConnectPostgres()
 	database.ConnectRedis()
+	kafka.Consume(context.Background())
 
 	router := gin.Default()
 
