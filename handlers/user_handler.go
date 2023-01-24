@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -34,7 +35,10 @@ func Signup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create user"})
 		return
 	}
-	kafka.Producer("new-user", result)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go kafka.Producer(ctx, user)
+
 	c.JSON(http.StatusOK, user)
 }
 

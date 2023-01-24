@@ -21,7 +21,6 @@ func main() {
 	loadEnv()
 	database.ConnectPostgres()
 	database.ConnectRedis()
-	kafka.Consume(context.Background())
 
 	router := gin.Default()
 
@@ -46,6 +45,7 @@ func main() {
 	//database.DB.Migrator().CreateTable(&entities.User{}, &entities.Todo{})
 	//router.GET("/protected", handlers.TokenVerifiyMiddleWare(ProtectedEndpoint))//
 	log.Fatal(router.Run("localhost:8080"))
+	go kafka.Consume(context.Background())
 }
 
 func loadEnv() {
