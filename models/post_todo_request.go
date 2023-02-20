@@ -16,6 +16,7 @@ import (
 //
 // swagger:model PostTodoRequest
 type PostTodoRequest struct {
+	
 
 	// description
 	Description string `json:"description,omitempty"`

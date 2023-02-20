@@ -3,7 +3,6 @@ package repository
 import (
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
-	"gorm.io/gorm/clause"
 )
 
 func GetTodos(t []*entities.Todo) ([]*entities.Todo, error) {
@@ -39,7 +38,15 @@ func DeleteTodo(t *entities.Todo) error {
 	return nil
 }
 
-func UpdateTodo(t entities.Todo) error {
-	return database.DB.Omit(clause.Associations).Save(&t).Error
+func UpdateTodo(todo *entities.Todo) error {
+	return database.DB.Save(todo).Error
+}
 
+func GetTodoByID(id uint) (*entities.Todo, error) {
+	var todo entities.Todo
+	err := database.DB.Where("id = ?", id).First(&todo).Error
+	if err != nil {
+		return nil, err
+	}
+	return &todo, nil
 }

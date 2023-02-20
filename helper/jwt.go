@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
+	"github.com/gokhankocer/TODO-API/repository"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -52,7 +53,7 @@ func CurrentUser(c *gin.Context) (entities.User, error) {
 	token, _ := GetToken(c)
 	claims, _ := token.Claims.(jwt.MapClaims)
 	userId := uint(claims["user_id"].(float64))
-	user, err := entities.FindUserById(userId)
+	user, err := repository.FindUserById(userId)
 	if err != nil {
 		return entities.User{}, err
 	}

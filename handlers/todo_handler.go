@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-openapi/strfmt"
-	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
 
@@ -36,59 +37,76 @@ func AddTodo(c *gin.Context) {
 
 	err := requestTodo.Validate(strfmt.Default)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
+		log.Println("error", err)
+		c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Missing Fields",
 		})
 		return
 	}
 	user, err := helper.CurrentUser(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not Logged in"})
+		log.Println("error", err)
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Not Logged in"})
 		return
 	}
 	var todo = entities.Todo{
 		Status:      requestTodo.Status,
 		Description: requestTodo.Description,
 	}
+
 	todo.UserID = user.ID
-	savedTodo, err := todo.Save()
-	fmt.Println(err)
+	savedTodo, err := repository.AddTodo(&todo)
+
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create todo"})
+		log.Println("error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create todo"})
 		return
 	}
-	fmt.Println(err)
+
 	c.JSON(http.StatusCreated, gin.H{"data": savedTodo})
 }
 
 func DeleteTodo(c *gin.Context) {
-	var todo entities.Todo
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Todo Not Found"})
+	id, _ := strconv.Atoi(c.Param("id"))
+	todo, err := repository.GetTodo(uint(id))
+	if err != nil {
+		log.Println("error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Todo Not Found"})
 		return
 	}
 	user, err := helper.CurrentUser(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
+		log.Println("error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User Error"})
 		return
 	}
 	if todo.UserID != user.ID {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not Authorized"})
 		return
 	}
-	repository.DeleteTodo(&todo)
-	c.JSON(200, &todo)
+	repository.DeleteTodo(todo)
+	responseTodo := &models.TodoResponse{
+		ID:          uint64(todo.ID),
+		Status:      todo.Status,
+		Description: todo.Description,
+	}
+	c.JSON(http.StatusNoContent, &responseTodo)
 }
 
 func UpdateTodo(c *gin.Context) {
-	var todo entities.Todo
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Todo Not Found"})
+	id, _ := strconv.Atoi(c.Param("id"))
+	todo, err := repository.GetTodo(uint(id))
+	if err != nil {
+		log.Println("error", err)
+
+		c.JSON(http.StatusNotFound, gin.H{"message": "Todo Not Found"})
 		return
 	}
 	user, err := helper.CurrentUser(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
+		log.Println("error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User Error"})
 		return
 	}
 	if todo.UserID != user.ID {
@@ -96,7 +114,7 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 	c.BindJSON(&todo)
-	database.DB.Save(&todo)
+	repository.UpdateTodo(todo)
 	responseTodo := &models.TodoResponse{
 		ID:          uint64(todo.ID),
 		Status:      todo.Status,
@@ -108,28 +126,47 @@ func UpdateTodo(c *gin.Context) {
 func GetTodo(c *gin.Context) {
 	user, err := helper.CurrentUser(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
+		log.Println("error getting current user:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User Error"})
 		return
 	}
-	var todo entities.Todo
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Todo not found"})
+	log.Println("current user:", user)
+	if user.ID == 0 {
+		log.Println("current user is nil")
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		log.Println("error", err)
+
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid Todo ID"})
 		return
 	}
+	todo, err := repository.GetTodo(uint(id))
+	if err != nil {
+		log.Println("error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Todo Not Found"})
+	}
+
 	if todo.UserID != user.ID {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not Authorized"})
 		return
 	}
-
-	c.JSON(http.StatusAccepted, &todo)
+	responseTodo := &models.TodoResponse{
+		ID:          uint64(todo.ID),
+		Status:      todo.Status,
+		Description: todo.Description,
+	}
+	c.JSON(http.StatusOK, &responseTodo)
 
 }
 
 func GetTodos(c *gin.Context) {
 	user, err := helper.CurrentUser(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
+		log.Println("error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User Error"})
 		return
 	}
+
 	c.JSON(http.StatusOK, user.Todos)
 }

@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/gokhankocer/TODO-API/database"
+	//"github.com/gokhankocer/TODO-API/database"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	//"time"
@@ -9,10 +9,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `json:"name"`
-	Email    string `json:"email" gorm:"unique"`
-	Password string `json:"password"`
+	Name     string `gorm:"name"`
+	Email    string `gorm:"email"`
+	Password string `gorm:"password"`
 	Todos    []Todo `gorm:"foreignKey:UserID"`
+	IsActive bool   `gorm:"is_active"`
 }
 
 func (user *User) HashPassword(password string) error {
@@ -32,20 +33,13 @@ func (user *User) VerifyPassword(providedPassword string) error {
 	return nil
 }
 
-func FindUserByName(name string) (User, error) {
-	var user User
-	err := database.DB.Where("name=?", name).Find(&user).Error
-	if err != nil {
-		return User{}, err
+/*func (user *User) BeforeSave(*gorm.DB) error {
+	if user.Password != "" {
+		bytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+		if err != nil {
+			return err
+		}
+		user.Password = string(bytes)
 	}
-	return user, nil
-}
-
-func FindUserById(id uint) (User, error) {
-	var user User
-	err := database.DB.Preload("Todos").Where("ID=?", id).Find(&user).Error
-	if err != nil {
-		return User{}, err
-	}
-	return user, nil
-}
+	return nil
+}*/

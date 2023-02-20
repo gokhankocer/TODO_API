@@ -21,7 +21,7 @@ func main() {
 	loadEnv()
 	database.ConnectPostgres()
 	database.ConnectRedis()
-
+	go kafka.Consume(context.Background(), "email")
 	router := gin.Default()
 
 	publicRoutes := router.Group("/auth")
@@ -42,10 +42,15 @@ func main() {
 	protectedRoutes.PATCH("users/:id", handlers.UpdateUser)
 	protectedRoutes.DELETE("users/:id", handlers.DeleteUser)
 
+	//database.DB.Migrator().DropTable(&entities.User{}, &entities.Todo{})
 	//database.DB.Migrator().CreateTable(&entities.User{}, &entities.Todo{})
-	//router.GET("/protected", handlers.TokenVerifiyMiddleWare(ProtectedEndpoint))//
+
+	go kafka.Consume(context.Background(), "mail")
+	router.GET("/api/activate/:id", kafka.Activate)
+	router.POST("/reset_password/:id", handlers.ConfirmResetPassword)
+	router.POST("/reset_password/", handlers.ResetPassword)
 	log.Fatal(router.Run("localhost:8080"))
-	go kafka.Consume(context.Background())
+
 }
 
 func loadEnv() {
@@ -55,4 +60,5 @@ func loadEnv() {
 	} else {
 		log.Print("Env successfully loaded")
 	}
+
 }
