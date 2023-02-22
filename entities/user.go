@@ -9,11 +9,12 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `gorm:"name"`
-	Email    string `gorm:"email"`
-	Password string `gorm:"password"`
-	Todos    []Todo `gorm:"foreignKey:UserID"`
-	IsActive bool   `gorm:"is_active"`
+	Name               string `gorm:"name"`
+	Email              string `gorm:"email"`
+	Password           string `gorm:"password"`
+	Todos              []Todo `gorm:"foreignKey:UserID"`
+	IsActive           bool   `gorm:"is_active"`
+	ResetPasswordToken string
 }
 
 func (user *User) HashPassword(password string) error {

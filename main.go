@@ -47,7 +47,7 @@ func main() {
 
 	go kafka.Consume(context.Background(), "mail")
 	router.GET("/api/activate/:id", kafka.Activate)
-	router.POST("/reset_password/:id", handlers.ConfirmResetPassword)
+	router.PATCH("/reset_password/:token", handlers.ConfirmResetPassword)
 	router.POST("/reset_password/", handlers.ResetPassword)
 	log.Fatal(router.Run("localhost:8080"))
 

@@ -103,10 +103,9 @@ func Activate(c *gin.Context) {
 
 }
 
-func SendResetPasswordEmail(email string, resetPasswordLink string) {
+func SendResetPasswordEmail(email string, resetPasswordToken string) {
+	resetPasswordLink := fmt.Sprintf("http://localhost:8080/reset_password/%s", resetPasswordToken)
 	message := fmt.Sprintf("Subject: Reset Password\n\nTo reset your password, please follow this link: %s", resetPasswordLink)
-	log.Println(email, resetPasswordLink)
-	SendEmail(message, email, "")
 	response, err := SendEmail(message, email, "")
 	if err != nil {
 		log.Println("Error sending email:", err)

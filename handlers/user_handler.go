@@ -13,6 +13,7 @@ import (
 	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
 	"github.com/gokhankocer/TODO-API/models"
 	"github.com/gokhankocer/TODO-API/repository"
+	"github.com/google/uuid"
 )
 
 func Signup(c *gin.Context) {
@@ -206,8 +207,15 @@ func ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
 		return
 	}
+	resetPasswordToken := uuid.New().String()
+	user.ResetPasswordToken = resetPasswordToken
+	if err := repository.UpdateUser(user.ID, &user); err != nil {
+		log.Println("error", "Failed to update reset password token")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update reset password token"})
+		return
+	}
 
-	resetPasswordLink := fmt.Sprintf("http://localhost:8080/reset_password/%d", user.ID)
+	resetPasswordLink := fmt.Sprintf("http://localhost:8080/reset_password/%s", resetPasswordToken)
 
 	// Send reset password email to the user's email address
 	kafka.SendResetPasswordEmail(user.Email, resetPasswordLink)
@@ -216,9 +224,11 @@ func ResetPassword(c *gin.Context) {
 }
 
 func ConfirmResetPassword(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
+	token := c.Param("token")
+
+	user, err := repository.FindUserByResetPasswordToken(token)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
 		return
 	}
 
@@ -228,15 +238,9 @@ func ConfirmResetPassword(c *gin.Context) {
 		return
 	}
 
-	user, err := repository.FindUserById(uint(userID))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
-		return
-	}
-
 	user.HashPassword(body.Password)
-
-	if err := repository.UpdateUser(uint(userID), &user); err != nil {
+	user.ResetPasswordToken = ""
+	if err := repository.UpdateUser(user.ID, user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}

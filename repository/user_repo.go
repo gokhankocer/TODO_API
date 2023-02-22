@@ -66,3 +66,11 @@ func UpdateUser(id uint, user *entities.User) error {
 func DeleteUser(id uint) error {
 	return database.DB.Delete(&entities.User{}, id).Error
 }
+func FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error) {
+	var user entities.User
+	err := database.DB.Where("reset_password_token = ?", resetPasswordToken).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
