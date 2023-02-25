@@ -215,7 +215,7 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	resetPasswordLink := fmt.Sprintf("http://localhost:8080/reset_password/%s", resetPasswordToken)
+	resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
 
 	// Send reset password email to the user's email address
 	kafka.SendResetPasswordEmail(user.Email, resetPasswordLink)

@@ -71,7 +71,7 @@ func Consume(ctx context.Context, topic string) {
 			continue
 		}
 		//log.Println("message", userData)
-		activationLink := fmt.Sprintf("http://localhost:8080/api/activate/%d", user.ID)
+		activationLink := fmt.Sprintf("http://localhost:3000/api/activate/%d", user.ID)
 		body := fmt.Sprintf("You account is now active and your ID is %d. Congrats!", user.ID)
 		message := strings.Join([]string{body}, " ")
 		//database.DB.Save(&user)
@@ -104,7 +104,7 @@ func Activate(c *gin.Context) {
 }
 
 func SendResetPasswordEmail(email string, resetPasswordToken string) {
-	resetPasswordLink := fmt.Sprintf("http://localhost:8080/reset_password/%s", resetPasswordToken)
+	resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
 	message := fmt.Sprintf("Subject: Reset Password\n\nTo reset your password, please follow this link: %s", resetPasswordLink)
 	response, err := SendEmail(message, email, "")
 	if err != nil {

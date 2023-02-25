@@ -4,10 +4,13 @@ import (
 	//"errors"
 
 	"context"
+	"flag"
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
+	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/handlers"
 	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
 	"github.com/gokhankocer/TODO-API/middleware"
@@ -18,8 +21,19 @@ import (
 )
 
 func main() {
+
 	loadEnv()
 	database.ConnectPostgres()
+
+	migrateFlag := flag.Bool("migrate", false, "migrate argument")
+	flag.Parse()
+	if *migrateFlag {
+		fmt.Println("Migrate started!")
+		database.DB.Migrator().DropTable(&entities.User{}, &entities.Todo{})
+		database.DB.Migrator().CreateTable(&entities.User{}, &entities.Todo{})
+		return
+	}
+
 	database.ConnectRedis()
 	go kafka.Consume(context.Background(), "email")
 	router := gin.Default()
@@ -42,21 +56,18 @@ func main() {
 	protectedRoutes.PATCH("users/:id", handlers.UpdateUser)
 	protectedRoutes.DELETE("users/:id", handlers.DeleteUser)
 
-	//database.DB.Migrator().DropTable(&entities.User{}, &entities.Todo{})
-	//database.DB.Migrator().CreateTable(&entities.User{}, &entities.Todo{})
-
 	go kafka.Consume(context.Background(), "mail")
 	router.GET("/api/activate/:id", kafka.Activate)
 	router.PATCH("/reset_password/:token", handlers.ConfirmResetPassword)
 	router.POST("/reset_password/", handlers.ResetPassword)
-	log.Fatal(router.Run("localhost:8080"))
+	log.Fatal(router.Run("0.0.0.0:3000"))
 
 }
 
 func loadEnv() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Print("No .env file")
 	} else {
 		log.Print("Env successfully loaded")
 	}
