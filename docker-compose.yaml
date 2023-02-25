@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   app:
-    image: todo-api:4
+    image: todo-api:5
     depends_on:
       - db
       - kafka
@@ -11,7 +11,7 @@ services:
     environment:
       DATABASE_URL: "host=db password=password user=gokhan  dbname=gokhan port=5432 sslmode=disable"
       PORT: ":3000"
-      SECRET:  asfhakhfkj7834787hjkehfke84833khjer
+      SECRET: "asfhakhfkj7834787hjkehfke84833khjer"
       TOKEN_TTL: "3600"
       AUTHORIZE_URL: http://auth:3001/auth/authorize
       EMAIL: gkkocer@gmail.com
