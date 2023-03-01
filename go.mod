@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/joho/godotenv v1.4.0
@@ -53,9 +54,9 @@ require (
 	github.com/segmentio/kafka-go v0.4.38
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	go.mongodb.org/mongo-driver v1.11.1 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

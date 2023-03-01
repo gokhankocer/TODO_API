@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
 	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
@@ -17,6 +16,7 @@ import (
 )
 
 func Signup(c *gin.Context) {
+
 	var user entities.User
 	if err := c.BindJSON(&user); err != nil {
 		log.Printf("Error binding JSON: %v", err)
@@ -38,52 +38,6 @@ func Signup(c *gin.Context) {
 
 	go kafka.Producer("new_user", user)
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
-}
-
-func Login(c *gin.Context) {
-
-	var body models.UserRequest
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
-		return
-	}
-
-	user, err := repository.FindUserByName(body.Name)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Name"})
-		return
-	}
-	if user.Email != body.Email {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Email"})
-		return
-	}
-
-	password := user.VerifyPassword(body.Password)
-	if password != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Password"})
-		return
-	}
-
-	jwt, err := helper.GenerateJwt(user)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to Create Token"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"token": jwt})
-
-}
-
-func Logout(c *gin.Context) {
-
-	token, _ := helper.GetToken(c)
-
-	err := database.RDB.Set(c, token.Raw, 1, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully Loged Out"})
-
 }
 
 func GetUsers(c *gin.Context) {

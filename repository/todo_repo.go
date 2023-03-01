@@ -5,6 +5,14 @@ import (
 	"github.com/gokhankocer/TODO-API/entities"
 )
 
+type TodoRepositoryInterface interface {
+	GetTodos(t []*entities.Todo) ([]*entities.Todo, error)
+	AddTodo(t *entities.Todo) (*entities.Todo, error)
+	GetTodo(id uint) (*entities.Todo, error)
+	DeleteTodo(t *entities.Todo) error
+	UpdateTodo(todo *entities.Todo) error
+}
+
 func GetTodos(t []*entities.Todo) ([]*entities.Todo, error) {
 	err := database.DB.Find(&t).Error
 	if err != nil {

@@ -1,14 +1,26 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserRepo struct {
 	DB *gorm.DB
 }
+
+type RepositoryInterface interface {
+	CreateUser(user *entities.User) error
+	HashPassword(password string) (string, error)
+}
+
+type Repository struct{}
+
+var Repo RepositoryInterface
 
 func FindUserByName(name string) (entities.User, error) {
 	var user entities.User
@@ -56,6 +68,12 @@ func GetUsers() ([]entities.User, error) {
 }
 
 func CreateUser(user *entities.User) error {
+	var existingUser entities.User
+	err := database.DB.Where("email = ?", user.Email).First(&existingUser).Error
+	if err == nil {
+		return errors.New("email already in use")
+	}
+
 	return database.DB.Create(user).Error
 }
 
@@ -73,4 +91,16 @@ func FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, er
 		return nil, err
 	}
 	return &user, nil
+}
+func CheckUserExists(email string) (bool, error) {
+	var count int64
+	err := database.DB.Model(&entities.User{}).Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+func (r *Repository) HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPassword), err
 }
