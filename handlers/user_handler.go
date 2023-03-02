@@ -1,22 +1,30 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
-	"github.com/gokhankocer/TODO-API/kafka_service/kafka"
+
 	"github.com/gokhankocer/TODO-API/models"
 	"github.com/gokhankocer/TODO-API/repository"
 	"github.com/google/uuid"
 )
 
-func Signup(c *gin.Context) {
+type UserHandler struct {
+	UserRepository repository.UserRepositoryInterface
+}
+
+func NewUserHandler(userRepository repository.UserRepositoryInterface) *UserHandler {
+	return &UserHandler{
+		UserRepository: userRepository,
+	}
+}
+
+func (handler *UserHandler) Signup(c *gin.Context) {
 	var user entities.User
 	if err := c.BindJSON(&user); err != nil {
 		log.Printf("Error binding JSON: %v", err)
@@ -30,64 +38,18 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if err := repository.CreateUser(&user); err != nil {
+	if err := handler.UserRepository.CreateUser(&user); err != nil {
 		log.Printf("Error creating user: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	go kafka.Producer("new_user", user)
+	// go kafka.Producer("new_user", user)
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
-func Login(c *gin.Context) {
-
-	var body models.UserRequest
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
-		return
-	}
-
-	user, err := repository.FindUserByName(body.Name)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Name"})
-		return
-	}
-	if user.Email != body.Email {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Email"})
-		return
-	}
-
-	password := user.VerifyPassword(body.Password)
-	if password != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Password"})
-		return
-	}
-
-	jwt, err := helper.GenerateJwt(user)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to Create Token"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"token": jwt})
-
-}
-
-func Logout(c *gin.Context) {
-
-	token, _ := helper.GetToken(c)
-
-	err := database.RDB.Set(c, token.Raw, 1, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully Loged Out"})
-
-}
-
-func GetUsers(c *gin.Context) {
-	users, err := repository.GetUsers()
+func (handler *UserHandler) GetUsers(c *gin.Context) {
+	users, err := handler.UserRepository.GetUsers()
 	if err != nil {
 		log.Println("error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid Request"})
@@ -97,7 +59,7 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, &users)
 }
 
-func GetUserById(c *gin.Context) {
+func (handler *UserHandler) GetUserById(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -105,7 +67,7 @@ func GetUserById(c *gin.Context) {
 		})
 		return
 	}
-	user, err := repository.GetUserByID(uint(id))
+	user, err := handler.UserRepository.GetUserByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "User not Found",
@@ -115,7 +77,7 @@ func GetUserById(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func UpdateUser(c *gin.Context) {
+func (handler *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid User ID"})
@@ -130,12 +92,14 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	uintID := uint(id)
-	user, err := repository.GetUserByID(uintID)
+	user, err := handler.UserRepository.GetUserByID(uintID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "User Not Found"})
 		return
 	}
-	currentUser, err := helper.CurrentUser(c)
+	currentUserID, err := helper.CurrentUser(c)
+	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
 		return
@@ -156,7 +120,7 @@ func UpdateUser(c *gin.Context) {
 		user.Email = userReq.Email
 	}
 
-	if err := repository.UpdateUser(uintID, user); err != nil {
+	if err := handler.UserRepository.UpdateUser(uintID, user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Update Error"})
 		return
 	}
@@ -168,14 +132,16 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func DeleteUser(c *gin.Context) {
+func (handler *UserHandler) DeleteUser(c *gin.Context) {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid User ID"})
 		return
 	}
 
-	currentUser, err := helper.CurrentUser(c)
+	currentUserID, err := helper.CurrentUser(c)
+	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
 		return
@@ -186,14 +152,14 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := repository.DeleteUser(uint(userID)); err != nil {
+	if err := handler.UserRepository.DeleteUser(uint(userID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User successfully deleted"})
 }
-func ResetPassword(c *gin.Context) {
+func (handler *UserHandler) ResetPassword(c *gin.Context) {
 	var request models.UserRequest
 	if c.BindJSON(&request) != nil {
 		log.Println("error", "Body Error")
@@ -201,7 +167,7 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	user, err := repository.FindUserByEmail(request.Email)
+	user, err := handler.UserRepository.FindUserByEmail(request.Email)
 	if err != nil {
 		log.Println("error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
@@ -209,24 +175,24 @@ func ResetPassword(c *gin.Context) {
 	}
 	resetPasswordToken := uuid.New().String()
 	user.ResetPasswordToken = resetPasswordToken
-	if err := repository.UpdateUser(user.ID, &user); err != nil {
+	if err := handler.UserRepository.UpdateUser(user.ID, &user); err != nil {
 		log.Println("error", "Failed to update reset password token")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update reset password token"})
 		return
 	}
 
-	resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
+	//resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
 
 	// Send reset password email to the user's email address
-	kafka.SendResetPasswordEmail(user.Email, resetPasswordLink)
+	// kafka.SendResetPasswordEmail(user.Email, resetPasswordLink)
 	log.Println("kafka")
 	c.JSON(http.StatusOK, gin.H{"message": "Reset password email sent"})
 }
 
-func ConfirmResetPassword(c *gin.Context) {
+func (handler *UserHandler) ConfirmResetPassword(c *gin.Context) {
 	token := c.Param("token")
 
-	user, err := repository.FindUserByResetPasswordToken(token)
+	user, err := handler.UserRepository.FindUserByResetPasswordToken(token)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
 		return
@@ -240,7 +206,7 @@ func ConfirmResetPassword(c *gin.Context) {
 
 	user.HashPassword(body.Password)
 	user.ResetPasswordToken = ""
-	if err := repository.UpdateUser(user.ID, user); err != nil {
+	if err := handler.UserRepository.UpdateUser(user.ID, user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}

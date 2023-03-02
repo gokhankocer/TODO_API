@@ -1,74 +1,88 @@
 package repository
 
 import (
-	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
 	"gorm.io/gorm"
 )
 
-type UserRepo struct {
+type userRepo struct {
 	DB *gorm.DB
 }
+type UserRepositoryInterface interface {
+	FindUserByName(name string) (entities.User, error)
+	FindUserByEmail(email string) (entities.User, error)
+	FindUserById(id uint) (entities.User, error)
+	GetUserByID(id uint) (*entities.User, error)
+	GetUsers() ([]entities.User, error)
+	CreateUser(user *entities.User) error
+	UpdateUser(id uint, user *entities.User) error
+	DeleteUser(id uint) error
+	FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error)
+}
 
-func FindUserByName(name string) (entities.User, error) {
+func NewUserRepository(DB *gorm.DB) UserRepositoryInterface {
+	return &userRepo{DB}
+}
+
+func (u *userRepo) FindUserByName(name string) (entities.User, error) {
 	var user entities.User
-	err := database.DB.Where("name=?", name).Find(&user).Error
+	err := u.DB.Where("name=?", name).Find(&user).Error
 	if err != nil {
 		return entities.User{}, err
 	}
 	return user, nil
 }
 
-func FindUserByEmail(email string) (entities.User, error) {
+func (u *userRepo) FindUserByEmail(email string) (entities.User, error) {
 	var user entities.User
-	err := database.DB.Where("email=?", email).Find(&user).Error
+	err := u.DB.Where("email=?", email).Find(&user).Error
 	if err != nil {
 		return entities.User{}, err
 	}
 	return user, nil
 }
 
-func FindUserById(id uint) (entities.User, error) {
+func (u *userRepo) FindUserById(id uint) (entities.User, error) {
 	var user entities.User
-	err := database.DB.Preload("Todos").Where("ID=?", id).Find(&user).Error
+	err := u.DB.Preload("Todos").Where("ID=?", id).Find(&user).Error
 	if err != nil {
 		return entities.User{}, err
 	}
 	return user, nil
 }
 
-func GetUserByID(id uint) (*entities.User, error) {
+func (u *userRepo) GetUserByID(id uint) (*entities.User, error) {
 	var user entities.User
-	err := database.DB.First(&user, id).Error
+	err := u.DB.First(&user, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func GetUsers() ([]entities.User, error) {
+func (u *userRepo) GetUsers() ([]entities.User, error) {
 	var users []entities.User
-	err := database.DB.Find(&users).Error
+	err := u.DB.Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func CreateUser(user *entities.User) error {
-	return database.DB.Create(user).Error
+func (u *userRepo) CreateUser(user *entities.User) error {
+	return u.DB.Create(user).Error
 }
 
-func UpdateUser(id uint, user *entities.User) error {
-	return database.DB.Model(&entities.User{}).Where("id = ?", id).Updates(user).Error
+func (u *userRepo) UpdateUser(id uint, user *entities.User) error {
+	return u.DB.Model(&entities.User{}).Where("id = ?", id).Updates(user).Error
 }
 
-func DeleteUser(id uint) error {
-	return database.DB.Delete(&entities.User{}, id).Error
+func (u *userRepo) DeleteUser(id uint) error {
+	return u.DB.Delete(&entities.User{}, id).Error
 }
-func FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error) {
+func (u *userRepo) FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error) {
 	var user entities.User
-	err := database.DB.Where("reset_password_token = ?", resetPasswordToken).First(&user).Error
+	err := u.DB.Where("reset_password_token = ?", resetPasswordToken).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
