@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -8,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/helper"
+	"github.com/gokhankocer/TODO-API/services/email"
+	"github.com/gokhankocer/TODO-API/services/kafka_client"
 
 	"github.com/gokhankocer/TODO-API/models"
 	"github.com/gokhankocer/TODO-API/repository"
@@ -44,7 +47,7 @@ func (handler *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	// go kafka.Producer("new_user", user)
+	go kafka_client.Producer("mail", user)
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
@@ -181,10 +184,10 @@ func (handler *UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	//resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
+	resetPasswordLink := fmt.Sprintf("http://localhost:3000/reset_password/%s", resetPasswordToken)
 
 	// Send reset password email to the user's email address
-	// kafka.SendResetPasswordEmail(user.Email, resetPasswordLink)
+	email.SendResetPasswordEmail(user.Email, resetPasswordLink)
 	log.Println("kafka")
 	c.JSON(http.StatusOK, gin.H{"message": "Reset password email sent"})
 }
@@ -215,3 +218,25 @@ func (handler *UserHandler) ConfirmResetPassword(c *gin.Context) {
 }
 
 // Write the code to update the user's password
+
+func (handler *UserHandler) Activate(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Println("error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User Id"})
+		return
+	}
+	user, err := handler.UserRepository.GetUserByID(uint(userID))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+		return
+	}
+	user.IsActive = true
+	if err := handler.UserRepository.UpdateUser(uint(userID), user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to activate user"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "User successfully activated"})
+
+}

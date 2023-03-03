@@ -3,6 +3,7 @@ package main
 import (
 	//"errors"
 
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +14,8 @@ import (
 	"github.com/gokhankocer/TODO-API/handlers"
 	"github.com/gokhankocer/TODO-API/middleware"
 	"github.com/gokhankocer/TODO-API/repository"
+	"github.com/gokhankocer/TODO-API/services/email"
+	"github.com/gokhankocer/TODO-API/services/kafka_client"
 	"github.com/joho/godotenv"
 	//"github.com/golang-jwt/jwt/v4"
 	//"golang.org/x/crypto/bcrypt"
@@ -34,10 +37,12 @@ func main() {
 	}
 
 	database.ConnectRedis()
-	// go kafka.Consume(context.Background(), "email")
-	// go kafka.Consume(context.Background(), "mail")
+
+	go kafka_client.Consume(context.Background(), "mail", email.MailCallback)
+
 	userRepository := repository.NewUserRepository(database.DB)
 	todoRepository := repository.NewTodoRepository(database.DB)
+
 	userHandler := handlers.NewUserHandler(userRepository)
 	todoHandler := handlers.NewTodoHandler(todoRepository, userRepository)
 
@@ -45,9 +50,6 @@ func main() {
 
 	publicRoutes := router.Group("/auth")
 	publicRoutes.POST("/signup", userHandler.Signup)
-	//publicRoutes.POST("/login", handlers.Login)
-
-	//publicRoutes.GET("/logout", middleware.AuthMiddleware(), handlers.Logout)
 
 	protectedRoutes := router.Group("/api")
 	protectedRoutes.Use(middleware.AuthMiddleware())
@@ -61,7 +63,7 @@ func main() {
 	protectedRoutes.PATCH("users/:id", userHandler.UpdateUser)
 	protectedRoutes.DELETE("users/:id", userHandler.DeleteUser)
 
-	// router.GET("/api/activate/:id", kafka.Activate)
+	router.GET("/api/activate/:id", userHandler.Activate)
 	router.PATCH("/reset_password/:token", userHandler.ConfirmResetPassword)
 	router.POST("/reset_password/", userHandler.ResetPassword)
 	log.Fatal(router.Run("0.0.0.0:3000"))
