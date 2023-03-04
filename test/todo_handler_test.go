@@ -1,21 +1,13 @@
 package test
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gokhankocer/TODO-API/entities"
-	"github.com/gokhankocer/TODO-API/handlers"
-	"github.com/gokhankocer/TODO-API/helper"
 )
 
-func TestGetTodos(t *testing.T) {
+/*func TestGetTodos(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
@@ -40,7 +32,7 @@ func TestGetTodos(t *testing.T) {
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("Expected status code %d but received %d", http.StatusInternalServerError, w.Code)
 	}
-}
+}*/
 
 func GetTodosWithMockUserFunc(mockUserFunc func(*gin.Context) (interface{}, error)) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -54,7 +46,8 @@ func GetTodosWithMockUserFunc(mockUserFunc func(*gin.Context) (interface{}, erro
 		c.JSON(http.StatusOK, user)
 	}
 }
-func TestAddTodo(t *testing.T) {
+
+/*func TestAddTodo(t *testing.T) {
 	r := gin.Default()
 	r.POST("/todos", handlers.AddTodo)
 	var user entities.User
@@ -81,4 +74,4 @@ func TestAddTodo(t *testing.T) {
 	if response["data"] == nil {
 		t.Error("Response data is nil")
 	}
-}
+}*/

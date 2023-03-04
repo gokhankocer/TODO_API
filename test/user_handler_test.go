@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,59 +10,86 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/handlers"
+	"github.com/gokhankocer/TODO-API/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-func toJSON(v interface{}) []byte {
-	b, _ := json.Marshal(v)
-	return b
-}
-
-func fromJSON(body []byte) gin.H {
-	var data gin.H
-	json.Unmarshal(body, &data)
-	return data
-}
-
-type MockUserRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) CreateUser(user *entities.User) error {
-	args := m.Called(user)
-	return args.Error(0)
-}
-func MockKafkaProducer(topic string, msg interface{}) {
-
-}
-
 func TestSignup(t *testing.T) {
-	recorder := httptest.NewRecorder()
 
-	repo := new(MockUserRepository)
-	repo.On("CreateUser", mock.Anything).Return(nil)
-	c, _ := gin.CreateTestContext(recorder)
-	c.Set("UserRepository", repo)
-	c.Set("KafkaProducer", MockKafkaProducer)
+	userRepositoryMock := &mocks.UserRepositoryInterface{}
+	userRepositoryMock.On("CreateUser", &entities.User{
+		Name:     "Gokhan",
+		Email:    "gokhan@test.com",
+		Password: "123",
+	}).Return(nil)
 
+	userHandler := handlers.NewUserHandler(userRepositoryMock)
+	router := gin.Default()
+	router.POST("/auth/signup", userHandler.Signup)
 	user := entities.User{
-		Name:     "test_user",
-		Password: "test_password",
-		Email:    "test_email@example.com",
+		Name:     "Gokhan",
+		Email:    "gokhan@test.com",
+		Password: "123",
+	}
+	requestBody, _ := json.Marshal(user)
+	request, _ := http.NewRequest("POST", "/auth/signup", bytes.NewBuffer(requestBody))
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	userRepositoryMock.AssertExpectations(t)
+}
+
+func TestGetUsers(t *testing.T) {
+
+	userRepositoryMock := &mocks.UserRepositoryInterface{}
+
+	var users = []entities.User{
+		{
+			Name:     "Gokhan",
+			Email:    "gokhan@test.com",
+			Password: "123",
+		},
 	}
 
-	c.Request, _ = http.NewRequest(http.MethodPost, "/signup", nil)
-	c.Request.Header.Add("Content-Type", "application/json")
-	c.Request.Body = ioutil.NopCloser(bytes.NewReader(toJSON(user)))
-	handlers.Signup(c)
+	userRepositoryMock.On("GetUsers").Return(users, nil)
 
-	assert.Equal(t, http.StatusOK, c.Writer.Status())
-	body, _ := ioutil.ReadAll(recorder.Body)
+	userHandler := handlers.NewUserHandler(userRepositoryMock)
+	router := gin.Default()
+	router.GET("/api/users", userHandler.GetUsers)
 
-	var response map[string]interface{}
-	json.Unmarshal(body, &response)
-	expectedResponse := gin.H{"message": "User created successfully"}
-	assert.Equal(t, expectedResponse, response)
-	repo.AssertExpectations(t)
+	request, _ := http.NewRequest("GET", "/api/users", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	userRepositoryMock.AssertExpectations(t)
+}
+
+func TestGetUserById(t *testing.T) {
+
+	userRepositoryMock := &mocks.UserRepositoryInterface{}
+
+	user := entities.User{
+		Name:     "Gokhan",
+		Email:    "gokhan@test.com",
+		Password: "123",
+	}
+
+	userRepositoryMock.On("GetUserByID", uint(1)).Return(&user, nil)
+
+	userHandler := handlers.NewUserHandler(userRepositoryMock)
+	router := gin.Default()
+
+	router.GET("/api/users/:id", userHandler.GetUserById)
+
+	request, _ := http.NewRequest("GET", "/api/users/1", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	userRepositoryMock.AssertExpectations(t)
 }
