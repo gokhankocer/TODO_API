@@ -1,0 +1,65 @@
+version: "3.9"
+services:
+  app:
+    image: todo-api:5
+    depends_on:
+      - db
+      - kafka
+      - redis
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "host=db password=password user=gokhan  dbname=gokhan port=5432 sslmode=disable"
+      PORT: ":3000"
+      SECRET: "asfhakhfkj7834787hjkehfke84833khjer"
+      TOKEN_TTL: "3600"
+      AUTHORIZE_URL: http://auth:3001/auth/authorize
+      EMAIL: gkkocer@gmail.com
+      PASSWORD: xvqfloviryfkjdnc
+      SMTP_SERVER: smtp.gmail.com
+      SMTP_PORT: "587"
+      KAFKA_BROKER: "kafka:9092"
+      REDIS_HOST: "redis:6379" 
+  auth:
+    image: user-api:1
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "host=db password=password user=gokhan  dbname=gokhan port=5432 sslmode=disable"
+      PORT: ":3001"
+      SECRET: "asfhakhfkj7834787hjkehfke84833khjer"
+      TOKEN_TTL: "3600"
+      REDIS_HOST: "redis:6379" 
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: gokhan
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: gokhan
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9093:9093"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT      
+    depends_on:
+      - zookeeper
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
