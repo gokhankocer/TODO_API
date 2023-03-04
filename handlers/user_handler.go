@@ -35,12 +35,6 @@ func (handler *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	if err := user.HashPassword(user.Password); err != nil {
-		log.Printf("Error hashing password: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
 	if err := handler.UserRepository.CreateUser(&user); err != nil {
 		log.Printf("Error creating user: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create user"})
@@ -100,7 +94,7 @@ func (handler *UserHandler) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "User Not Found"})
 		return
 	}
-	currentUserID, err := helper.CurrentUser(c)
+	currentUserID, _ := helper.CurrentUser(c)
 	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
 
 	if err != nil {
@@ -142,7 +136,7 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	currentUserID, err := helper.CurrentUser(c)
+	currentUserID, _ := helper.CurrentUser(c)
 	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
 
 	if err != nil {

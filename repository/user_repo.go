@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/gokhankocer/TODO-API/entities"
 	"gorm.io/gorm"
 )
@@ -70,6 +72,11 @@ func (u *userRepo) GetUsers() ([]entities.User, error) {
 }
 
 func (u *userRepo) CreateUser(user *entities.User) error {
+
+	if err := user.HashPassword(user.Password); err != nil {
+		log.Printf("Error hashing password: %v", err)
+	}
+
 	return u.DB.Create(user).Error
 }
 

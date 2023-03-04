@@ -58,7 +58,7 @@ func main() {
 	protectedRoutes.DELETE("todos/:id", todoHandler.DeleteTodo)
 	protectedRoutes.GET("todos/:id", todoHandler.GetTodo)
 	protectedRoutes.PATCH("todos/:id", todoHandler.UpdateTodo)
-	protectedRoutes.GET("users/", userHandler.GetUsers)
+	protectedRoutes.GET("users", userHandler.GetUsers)
 	protectedRoutes.GET("users/:id", userHandler.GetUserById)
 	protectedRoutes.PATCH("users/:id", userHandler.UpdateUser)
 	protectedRoutes.DELETE("users/:id", userHandler.DeleteUser)
