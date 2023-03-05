@@ -55,7 +55,7 @@ func SendResetPasswordEmail(emailAddress string, resetPasswordToken string) {
 	log.Println(response)
 }
 
-func MailCallback(msg kafka.Message) {
+func NewUserMailCallback(msg kafka.Message) {
 	//log.Println("Successfully read message: ", string(msg.Value))
 	userData := (msg.Value)
 	var user entities.User

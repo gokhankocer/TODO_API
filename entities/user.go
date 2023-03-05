@@ -14,7 +14,7 @@ type User struct {
 	Password           string `gorm:"password"`
 	Todos              []Todo `gorm:"foreignKey:UserID"`
 	IsActive           bool   `gorm:"is_active"`
-	ResetPasswordToken string
+	ResetPasswordToken string `gorm:"reset_password_token"`
 }
 
 func (user *User) HashPassword(password string) error {

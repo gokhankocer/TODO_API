@@ -38,7 +38,7 @@ func main() {
 
 	database.ConnectRedis()
 
-	go kafka_client.Consume(context.Background(), "mail", email.MailCallback)
+	go kafka_client.Consume(context.Background(), "mail", email.NewUserMailCallback)
 
 	userRepository := repository.NewUserRepository(database.DB)
 	todoRepository := repository.NewTodoRepository(database.DB)

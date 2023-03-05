@@ -13,11 +13,11 @@ type UserRepositoryInterface struct {
 }
 
 // CreateUser provides a mock function with given fields: user
-func (_m *UserRepositoryInterface) CreateUser(user *entities.User) error {
+func (_m *UserRepositoryInterface) CreateUser(user entities.User) error {
 	ret := _m.Called(user)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*entities.User) error); ok {
+	if rf, ok := ret.Get(0).(func(entities.User) error); ok {
 		r0 = rf(user)
 	} else {
 		r0 = ret.Error(0)
@@ -104,16 +104,14 @@ func (_m *UserRepositoryInterface) FindUserByName(name string) (entities.User, e
 }
 
 // FindUserByResetPasswordToken provides a mock function with given fields: resetPasswordToken
-func (_m *UserRepositoryInterface) FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error) {
+func (_m *UserRepositoryInterface) FindUserByResetPasswordToken(resetPasswordToken string) (entities.User, error) {
 	ret := _m.Called(resetPasswordToken)
 
-	var r0 *entities.User
-	if rf, ok := ret.Get(0).(func(string) *entities.User); ok {
+	var r0 entities.User
+	if rf, ok := ret.Get(0).(func(string) entities.User); ok {
 		r0 = rf(resetPasswordToken)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*entities.User)
-		}
+		r0 = ret.Get(0).(entities.User)
 	}
 
 	var r1 error
@@ -127,16 +125,14 @@ func (_m *UserRepositoryInterface) FindUserByResetPasswordToken(resetPasswordTok
 }
 
 // GetUserByID provides a mock function with given fields: id
-func (_m *UserRepositoryInterface) GetUserByID(id uint) (*entities.User, error) {
+func (_m *UserRepositoryInterface) GetUserByID(id uint) (entities.User, error) {
 	ret := _m.Called(id)
 
-	var r0 *entities.User
-	if rf, ok := ret.Get(0).(func(uint) *entities.User); ok {
+	var r0 entities.User
+	if rf, ok := ret.Get(0).(func(uint) entities.User); ok {
 		r0 = rf(id)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*entities.User)
-		}
+		r0 = ret.Get(0).(entities.User)
 	}
 
 	var r1 error
@@ -173,11 +169,11 @@ func (_m *UserRepositoryInterface) GetUsers() ([]entities.User, error) {
 }
 
 // UpdateUser provides a mock function with given fields: id, user
-func (_m *UserRepositoryInterface) UpdateUser(id uint, user *entities.User) error {
+func (_m *UserRepositoryInterface) UpdateUser(id uint, user entities.User) error {
 	ret := _m.Called(id, user)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(uint, *entities.User) error); ok {
+	if rf, ok := ret.Get(0).(func(uint, entities.User) error); ok {
 		r0 = rf(id, user)
 	} else {
 		r0 = ret.Error(0)
