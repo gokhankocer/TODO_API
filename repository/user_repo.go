@@ -14,12 +14,12 @@ type UserRepositoryInterface interface {
 	FindUserByName(name string) (entities.User, error)
 	FindUserByEmail(email string) (entities.User, error)
 	FindUserById(id uint) (entities.User, error)
-	GetUserByID(id uint) (*entities.User, error)
+	GetUserByID(id uint) (entities.User, error)
 	GetUsers() ([]entities.User, error)
-	CreateUser(user *entities.User) error
-	UpdateUser(id uint, user *entities.User) error
+	CreateUser(user entities.User) error
+	UpdateUser(id uint, user entities.User) error
 	DeleteUser(id uint) error
-	FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error)
+	FindUserByResetPasswordToken(resetPasswordToken string) (entities.User, error)
 }
 
 func NewUserRepository(DB *gorm.DB) UserRepositoryInterface {
@@ -53,13 +53,13 @@ func (u *userRepo) FindUserById(id uint) (entities.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) GetUserByID(id uint) (*entities.User, error) {
+func (u *userRepo) GetUserByID(id uint) (entities.User, error) {
 	var user entities.User
 	err := u.DB.First(&user, id).Error
 	if err != nil {
-		return nil, err
+		return entities.User{}, err
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (u *userRepo) GetUsers() ([]entities.User, error) {
@@ -71,7 +71,7 @@ func (u *userRepo) GetUsers() ([]entities.User, error) {
 	return users, nil
 }
 
-func (u *userRepo) CreateUser(user *entities.User) error {
+func (u *userRepo) CreateUser(user entities.User) error {
 
 	if err := user.HashPassword(user.Password); err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -80,18 +80,18 @@ func (u *userRepo) CreateUser(user *entities.User) error {
 	return u.DB.Create(user).Error
 }
 
-func (u *userRepo) UpdateUser(id uint, user *entities.User) error {
+func (u *userRepo) UpdateUser(id uint, user entities.User) error {
 	return u.DB.Model(&entities.User{}).Where("id = ?", id).Updates(user).Error
 }
 
 func (u *userRepo) DeleteUser(id uint) error {
 	return u.DB.Delete(&entities.User{}, id).Error
 }
-func (u *userRepo) FindUserByResetPasswordToken(resetPasswordToken string) (*entities.User, error) {
+func (u *userRepo) FindUserByResetPasswordToken(resetPasswordToken string) (entities.User, error) {
 	var user entities.User
 	err := u.DB.Where("reset_password_token = ?", resetPasswordToken).First(&user).Error
 	if err != nil {
-		return nil, err
+		return entities.User{}, err
 	}
-	return &user, nil
+	return user, nil
 }

@@ -35,7 +35,7 @@ func (handler *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	if err := handler.UserRepository.CreateUser(&user); err != nil {
+	if err := handler.UserRepository.CreateUser(user); err != nil {
 		log.Printf("Error creating user: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create user"})
 		return
@@ -94,8 +94,10 @@ func (handler *UserHandler) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "User Not Found"})
 		return
 	}
+
+	//TODO ask team fohow to mock
 	currentUserID, _ := helper.CurrentUser(c)
-	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
+	currentUser, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
@@ -135,9 +137,13 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid User ID"})
 		return
 	}
+	if err := handler.UserRepository.DeleteUser(uint(userID)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
 
 	currentUserID, _ := helper.CurrentUser(c)
-	currentUser, err := handler.UserRepository.FindUserById(currentUserID)
+	currentUser, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User Error"})
@@ -172,7 +178,7 @@ func (handler *UserHandler) ResetPassword(c *gin.Context) {
 	}
 	resetPasswordToken := uuid.New().String()
 	user.ResetPasswordToken = resetPasswordToken
-	if err := handler.UserRepository.UpdateUser(user.ID, &user); err != nil {
+	if err := handler.UserRepository.UpdateUser(user.ID, user); err != nil {
 		log.Println("error", "Failed to update reset password token")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update reset password token"})
 		return
