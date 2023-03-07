@@ -137,10 +137,6 @@ func (handler *UserHandler) DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid User ID"})
 		return
 	}
-	if err := handler.UserRepository.DeleteUser(uint(userID)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
-		return
-	}
 
 	currentUserID, _ := helper.CurrentUser(c)
 	currentUser, err := handler.UserRepository.GetUserByID(currentUserID)
