@@ -7,7 +7,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.5.0

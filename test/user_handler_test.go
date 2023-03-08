@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/entities"
 	"github.com/gokhankocer/TODO-API/handlers"
+	"github.com/gokhankocer/TODO-API/middleware"
 
 	"github.com/gokhankocer/TODO-API/mocks"
 	"github.com/gokhankocer/TODO-API/models"
@@ -142,15 +144,14 @@ func TestDeleteUser(t *testing.T) {
 	}
 	userRepositoryMock.On("GetUserByID", mock.Anything).Return(user, nil)
 	userRepositoryMock.On("DeleteUser", uint(1)).Return(nil)
-
 	userHandler := handlers.NewUserHandler(userRepositoryMock)
 	router := gin.Default()
-
+	router.Use(middleware.AuthMiddleware())
 	router.DELETE("/api/users/:id", userHandler.DeleteUser)
 	request, _ := http.NewRequest("DELETE", "/api/users/1", nil)
+	request.Header.Add("Authorization", os.Getenv("SECRET"))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, request)
-
 	assert.Equal(t, http.StatusOK, response.Code)
 	userRepositoryMock.AssertExpectations(t)
 }

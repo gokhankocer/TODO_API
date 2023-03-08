@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gokhankocer/TODO-API/database"
 	"github.com/gokhankocer/TODO-API/entities"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 )
 
 var jwtKey = []byte(os.Getenv("SECRET"))
