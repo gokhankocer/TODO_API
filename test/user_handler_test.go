@@ -3,9 +3,9 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -136,22 +136,29 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	userRepositoryMock := &mocks.UserRepositoryInterface{}
 	user := entities.User{
-		Name:               "Gokhan",
-		Email:              "gokhan@test.com",
-		Password:           "123",
-		IsActive:           true,
-		ResetPasswordToken: "",
+		Name:     "Gokhan",
+		Email:    "gokhan@test.com",
+		Password: "123",
 	}
+	user.ID = 1
 	userRepositoryMock.On("GetUserByID", mock.Anything).Return(user, nil)
 	userRepositoryMock.On("DeleteUser", uint(1)).Return(nil)
+
 	userHandler := handlers.NewUserHandler(userRepositoryMock)
 	router := gin.Default()
-	router.Use(middleware.AuthMiddleware())
 	router.DELETE("/api/users/:id", userHandler.DeleteUser)
+	router.Use(middleware.CurrentUserMiddleware())
 	request, _ := http.NewRequest("DELETE", "/api/users/1", nil)
-	request.Header.Add("Authorization", os.Getenv("SECRET"))
 	response := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(response)
+	c.Set("userID", 1)
+
 	router.ServeHTTP(response, request)
+	// Debug statement to check response code
+	fmt.Println("Response Code:", response.Code)
+
+	// Debug statement to check response body
+	fmt.Println("Response Body:", response.Body.String())
 	assert.Equal(t, http.StatusOK, response.Code)
 	userRepositoryMock.AssertExpectations(t)
 }

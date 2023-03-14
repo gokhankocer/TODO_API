@@ -11,7 +11,6 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
-		secret := os.Getenv("SECRET")
 		url := os.Getenv("AUTHORIZE_URL")
 		client := &http.Client{}
 		req, _ := http.NewRequest("GET", url, nil)
@@ -23,15 +22,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK || token != secret {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Not authorized"})
+		if resp.StatusCode != http.StatusOK {
+			c.JSON(resp.StatusCode, gin.H{"error": "Not authorized"})
 			c.Abort()
 			return
 		}
 		c.Next()
 	}
 }
-func SetUserIDMiddleware() gin.HandlerFunc {
+func CurrentUserMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, err := helper.CurrentUser(c)
 		if err != nil {
@@ -42,4 +41,5 @@ func SetUserIDMiddleware() gin.HandlerFunc {
 		c.Set("userID", userID)
 		c.Next()
 	}
+
 }

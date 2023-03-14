@@ -15,16 +15,6 @@ import (
 	"github.com/gokhankocer/TODO-API/repository"
 )
 
-/*
-	type TodoHandler struct {
-		TodoRepository repository.ToDoRepoInterface
-	}
-
-	func CreateHandeler(TodoRepo repository.ToDoRepoInterface) *TodoHandler {
-		return &TodoHandler{TodoRepository: TodoRepo}
-	}
-*/
-
 type TodoHandler struct {
 	TodoRepository repository.TodoRepositoryInterface
 	UserRepository repository.UserRepositoryInterface
@@ -58,7 +48,7 @@ func (handler *TodoHandler) AddTodo(c *gin.Context) {
 	}
 
 	currentUserID, err := helper.CurrentUser(c)
-	user, err := handler.UserRepository.FindUserById(currentUserID)
+	user, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		log.Println("error", err)
@@ -91,7 +81,7 @@ func (handler *TodoHandler) DeleteTodo(c *gin.Context) {
 		return
 	}
 	currentUserID, err := helper.CurrentUser(c)
-	user, err := handler.UserRepository.FindUserById(currentUserID)
+	user, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		log.Println("error", err)
@@ -121,7 +111,7 @@ func (handler *TodoHandler) UpdateTodo(c *gin.Context) {
 		return
 	}
 	currentUserID, err := helper.CurrentUser(c)
-	user, err := handler.UserRepository.FindUserById(currentUserID)
+	user, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		log.Println("error", err)
@@ -145,7 +135,7 @@ func (handler *TodoHandler) UpdateTodo(c *gin.Context) {
 func (handler *TodoHandler) GetTodo(c *gin.Context) {
 
 	currentUserID, err := helper.CurrentUser(c)
-	user, err := handler.UserRepository.FindUserById(currentUserID)
+	user, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		log.Println("error getting current user:", err)
@@ -184,7 +174,7 @@ func (handler *TodoHandler) GetTodo(c *gin.Context) {
 
 func (handler *TodoHandler) GetTodos(c *gin.Context) {
 	currentUserID, err := helper.CurrentUser(c)
-	user, err := handler.UserRepository.FindUserById(currentUserID)
+	user, err := handler.UserRepository.GetUserByID(currentUserID)
 
 	if err != nil {
 		log.Println("error:", err)

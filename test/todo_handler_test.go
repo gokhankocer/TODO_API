@@ -1,77 +1,99 @@
 package test
 
 import (
-	"log"
+	"bytes"
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gokhankocer/TODO-API/entities"
+	"github.com/gokhankocer/TODO-API/handlers"
+	"github.com/gokhankocer/TODO-API/mocks"
+	"github.com/gokhankocer/TODO-API/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-/*func TestGetTodos(t *testing.T) {
-	// Setup
-	gin.SetMode(gin.TestMode)
+func TestAddTodo(t *testing.T) {
+	todoRepositoryMock := &mocks.TodoRepositoryInterface{}
+	userRepositoryMock := &mocks.UserRepositoryInterface{}
+
+	user := entities.User{
+
+		Name:     "Gokhan ",
+		Email:    "test@gmail.com",
+		Password: "password",
+		IsActive: true,
+	}
+
+	todo := entities.Todo{
+		ID:          1,
+		Description: "Test Todo",
+		Status:      "Todo",
+		UserID:      user.ID,
+	}
+
+	requestTodo := models.PostTodoRequest{
+		Description: "Test Todo",
+		Status:      "Todo",
+	}
+
+	userRepositoryMock.On("GetUserByID", mock.Anything).Return(&user, nil)
+	todoRepositoryMock.On("AddTodo", todo).Return(&todo, nil)
+
+	handler := handlers.NewTodoHandler(todoRepositoryMock, userRepositoryMock)
 	router := gin.Default()
-	router.GET("/todos", handlers.GetTodos)
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/todos", nil)
+	router.POST("/api/todos", handler.AddTodo)
 
-	// Test with no errors
-	router.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status code %d but received %d", http.StatusOK, w.Code)
-	}
+	payload, _ := json.Marshal(requestTodo)
+	req, _ := http.NewRequest("POST", "/api/todos", bytes.NewBuffer(payload))
 
-	// Test with errors
-	mockUserFunc := func(*gin.Context) (interface{}, error) {
-		return nil, fmt.Errorf("Mock Error")
-	}
-	router.GET("/todos", GetTodosWithMockUserFunc(mockUserFunc))
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/todos", nil)
-	router.ServeHTTP(w, req)
-	if w.Code != http.StatusInternalServerError {
-		t.Errorf("Expected status code %d but received %d", http.StatusInternalServerError, w.Code)
-	}
-}*/
+	// Serve the request and get the response
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
 
-func GetTodosWithMockUserFunc(mockUserFunc func(*gin.Context) (interface{}, error)) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		user, err := mockUserFunc(c)
-		if err != nil {
-			log.Println("error:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "User Error"})
-			return
-		}
+	// Assert the response code is 201 (created)
 
-		c.JSON(http.StatusOK, user)
-	}
+	// Assert the mock expectations
+	todoRepositoryMock.AssertExpectations(t)
+	userRepositoryMock.AssertExpectations(t)
 }
+func TestGetTodos(t *testing.T) {
+	todoRepositoryMock := &mocks.TodoRepositoryInterface{}
+	userRepositoryMock := &mocks.UserRepositoryInterface{}
 
-/*func TestAddTodo(t *testing.T) {
-	r := gin.Default()
-	r.POST("/todos", handlers.AddTodo)
-	var user entities.User
-	token, err := helper.GenerateJwt(user)
-	if err != nil {
-		t.Errorf("Error generating JWT: %v", err)
+	user := entities.User{
+
+		Name:     "Gokhan ",
+		Email:    "test@gmail.com",
+		Password: "password",
+		IsActive: true,
 	}
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/todos", strings.NewReader(`{"status": "pending", "description": "Write code"}`))
-	req.Header.Set("Authorization", "Bearer "+token)
-	r.ServeHTTP(w, req)
-
-	if w.Code != 201 {
-		t.Errorf("Expected response code 201, but got %v", w.Code)
+	todo := entities.Todo{
+		ID:          1,
+		Description: "Test Todo",
+		Status:      "Todo",
+		UserID:      user.ID,
 	}
 
-	var response map[string]interface{}
-	err = json.Unmarshal(w.Body.Bytes(), &response)
-	if err != nil {
-		t.Errorf("Error unmarshalling response: %v", err)
-	}
+	userRepositoryMock.On("GetUserByID", mock.Anything).Return(&user, nil)
+	todoRepositoryMock.On("GetTodos", todo).Return(todo, nil)
 
-	if response["data"] == nil {
-		t.Error("Response data is nil")
-	}
-}*/
+	handler := handlers.NewTodoHandler(todoRepositoryMock, userRepositoryMock)
+	router := gin.Default()
+
+	router.GET("/api/todos", handler.GetTodos)
+
+	request, _ := http.NewRequest("GET", "/api/todos", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+
+	// Assert the expectations of the mock repository
+	todoRepositoryMock.AssertExpectations(t)
+}
